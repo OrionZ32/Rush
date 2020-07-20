@@ -4,11 +4,17 @@ using UnityEngine;
 
 public class Waypoint : MonoBehaviour {
 
-    void Start() {
-        
+    const int gridSize = 10;
+    Vector2Int gridPos;
+
+    public int GetGridSize() {
+        return gridSize;
     }
 
-    void Update() {
-        
+    public Vector2 GetGridPos() {
+        return new Vector2Int(
+            Mathf.RoundToInt(transform.position.x / gridSize) * gridSize,
+            Mathf.RoundToInt(transform.position.z /gridSize) * gridSize
+        );
     }
 }
