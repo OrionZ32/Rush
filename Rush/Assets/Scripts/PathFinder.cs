@@ -6,7 +6,6 @@ public class PathFinder : MonoBehaviour {
 
     [SerializeField] Waypoint startWaypoint, endWaypoint;
     [SerializeField] bool isRunning = true;
-    
     Dictionary<Vector2Int, Waypoint> grid = new Dictionary<Vector2Int, Waypoint>();
     Queue<Waypoint> queue = new Queue<Waypoint>();
     
@@ -21,15 +20,17 @@ public class PathFinder : MonoBehaviour {
         LoadBlocks();
         ColorStartAndEnd();
         PathFind();
-        // ExploreNeighbours();
+        // Exploreneighbors();
     }
 
-    private void PathFind() {
+    private void PathFind() { 
         queue.Enqueue(startWaypoint);
-        while(queue.Count > 0) {
+        while(queue.Count > 0 && isRunning) {
             var searchCenter = queue.Dequeue();
             print("Searching from: " + searchCenter);
             HaltIfEndFound(searchCenter);
+            ExploreNeighbors(searchCenter);
+            searchCenter.isExplored = true;
         }
         print("Finished pathfinding?");
     }
@@ -41,16 +42,30 @@ public class PathFinder : MonoBehaviour {
         }
     }
 
-    private void ExploreNeighbours() {
-        foreach(Vector2Int direction in directions) {
-            Vector2Int explorationCoordinates = startWaypoint.GetGridPos() + direction;
+    private void ExploreNeighbors(Waypoint from) {
+        if (!isRunning) {return;}
 
+        foreach(Vector2Int direction in directions) {
+            Vector2Int neighborCoordinates = from.GetGridPos() + direction;
             try {
-                grid[explorationCoordinates].SetTopColor(Color.magenta);
-            } catch {
-                Debug.LogError("no blocks");
+                QueueNewNeighbors(neighborCoordinates);
+            } 
+            catch {
+                // Debug.LogError("no blocks");
             }
-            
+        }
+    }
+
+    private void QueueNewNeighbors(Vector2Int neighborCoordinates) {
+        Waypoint neighbor = grid[neighborCoordinates];
+
+        if (neighbor.isExplored) {
+
+        }
+        else {    
+            neighbor.SetTopColor(Color.magenta);
+            queue.Enqueue(neighbor);
+            print("Queuing " + neighbor);
         }
     }
 
@@ -61,16 +76,15 @@ public class PathFinder : MonoBehaviour {
 
     private void LoadBlocks() {
         var waypoints = FindObjectsOfType<Waypoint>();
-
         foreach (Waypoint waypoint in waypoints) {
             var gridPos = waypoint.GetGridPos();
 
             if (grid.ContainsKey(gridPos)) {
                 Debug.LogWarning("Skipping overlapping block " + waypoint);
-            } else {
+            } 
+            else {
                 grid.Add(gridPos, waypoint);
             }
-
         }
         // print("Loaded " + grid.Count + " blocks");
     }
