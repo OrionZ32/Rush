@@ -4,10 +4,12 @@ using UnityEngine;
 
 public class PathFinder : MonoBehaviour {
 
-    [SerializeField] Waypoint startWaypoint, endWaypoint;
-    [SerializeField] bool isRunning = true;
     Dictionary<Vector2Int, Waypoint> grid = new Dictionary<Vector2Int, Waypoint>();
     Queue<Waypoint> queue = new Queue<Waypoint>();
+
+    [SerializeField] Waypoint startWaypoint, endWaypoint;
+    bool isRunning = true;
+    Waypoint searchCenter;
     
     Vector2Int[] directions = {
         Vector2Int.up,
@@ -26,27 +28,25 @@ public class PathFinder : MonoBehaviour {
     private void PathFind() { 
         queue.Enqueue(startWaypoint);
         while(queue.Count > 0 && isRunning) {
-            var searchCenter = queue.Dequeue();
-            print("Searching from: " + searchCenter);
-            HaltIfEndFound(searchCenter);
-            ExploreNeighbors(searchCenter);
+            searchCenter = queue.Dequeue();
+            HaltIfEndFound();
+            ExploreNeighbors();
             searchCenter.isExplored = true;
         }
         print("Finished pathfinding?");
     }
 
-    private void HaltIfEndFound(Waypoint searchCenter) {
+    private void HaltIfEndFound() {
         if (searchCenter == endWaypoint) {
-            print("Searching from end node, stopping");
             isRunning = false;
         }
     }
 
-    private void ExploreNeighbors(Waypoint from) {
+    private void ExploreNeighbors() {
         if (!isRunning) {return;}
 
         foreach(Vector2Int direction in directions) {
-            Vector2Int neighborCoordinates = from.GetGridPos() + direction;
+            Vector2Int neighborCoordinates = searchCenter.GetGridPos() + direction;
             try {
                 QueueNewNeighbors(neighborCoordinates);
             } 
@@ -59,13 +59,12 @@ public class PathFinder : MonoBehaviour {
     private void QueueNewNeighbors(Vector2Int neighborCoordinates) {
         Waypoint neighbor = grid[neighborCoordinates];
 
-        if (neighbor.isExplored) {
-
+        if (neighbor.isExplored || queue.Contains(neighbor)) {
+            // do nothing
         }
         else {    
-            neighbor.SetTopColor(Color.magenta);
             queue.Enqueue(neighbor);
-            print("Queuing " + neighbor);
+            neighbor.exploredFrom = searchCenter;
         }
     }
 
